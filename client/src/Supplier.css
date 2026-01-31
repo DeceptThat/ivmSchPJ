@@ -1,0 +1,217 @@
+.stk-page-container { background-color: #9abed6; height: 100vh; display: flex; flex-direction: column; font-family: sans-serif; }
+.stk-header-dark { background: #333; color: white; padding: 15px 30px; font-size: 1.5rem; font-style: italic; border-bottom: 2px solid #000; }
+.stk-content-area { padding: 25px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.stk-search-row { display: flex; gap: 15px; margin-bottom: 25px; }
+.stk-search-pill { background: white; border: 1.5px solid #333; border-radius: 25px; padding: 10px 20px; display: flex; align-items: center; width: 350px; }
+.stk-search-pill input { border: none; outline: none; width: 100%; font-style: italic; margin-left: 10px; }
+.stk-search-btn { background: #cbd5e1; border: 1.5px solid #333; border-radius: 20px; padding: 10px 30px; cursor: pointer; font-style: italic; }
+.stk-main-grid { display: grid; grid-template-columns: 1fr 180px; gap: 25px; flex: 1; min-height: 0; }
+.stk-table-box { background: white; border: 2px solid #333; border-radius: 5px; overflow-y: auto; }
+.stk-data-table { width: 100%; border-collapse: collapse; text-align: left; }
+.stk-data-table th { background: #eee; padding: 12px; border: 1px solid #333; position: sticky; top: 0; }
+.stk-data-table td { padding: 12px; border: 1px solid #ddd; }
+.stk-bold { font-weight: bold; }
+.stk-sidebar { display: flex; flex-direction: column; gap: 20px; }
+.stk-btn { border: 1.5px solid #333; border-radius: 20px; padding: 15px; font-weight: bold; font-style: italic; cursor: pointer; }
+.stk-green { background: #c1e1c1; }
+.stk-return { background: #cbd5e1; margin-top: auto; }
+.stk-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; }
+.stk-entry-modal { background: #9abed6; border: 3px solid #333; border-radius: 15px; padding: 30px; width: 450px; display: flex; flex-direction: column; gap: 15px; }
+.stk-form-row { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-style: italic; }
+.stk-form-row input { width: 250px; padding: 8px; border-radius: 15px; border: 1px solid #333; }
+.stk-confirm-btn { background: #c1e1c1; border: 1px solid #333; border-radius: 15px; padding: 12px; font-weight: bold; cursor: pointer; }
+
+/* Isolated Supplier Styles to prevent "Backyard Fire" */
+.sup-main-wrapper {
+    background-color: #9abed6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sup-top-header {
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    border-bottom: 2px solid #000;
+}
+
+.sup-top-header h1 {
+    font-size: 1.2rem;
+    font-style: italic;
+    margin: 0;
+}
+
+.sup-page-content {
+    padding: 20px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sup-nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sup-search-pill {
+    background: white;
+    border: 1.5px solid #333;
+    border-radius: 25px;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    width: 300px;
+}
+
+.sup-search-pill input {
+    border: none;
+    outline: none;
+    width: 100%;
+    margin-left: 10px;
+    font-style: italic;
+}
+
+.sup-btn-add {
+    background-color: #c1e1c1;
+    border: 1.5px solid #333;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-weight: bold;
+    font-style: italic;
+    cursor: pointer;
+}
+
+.sup-table-container {
+    background: white;
+    border: 2px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+    min-height: 400px;
+}
+
+.sup-styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+.sup-styled-table th {
+    background-color: #f8f9fa;
+    color: #666;
+    text-align: left;
+    padding: 15px;
+    border-bottom: 1.5px solid #333;
+    font-size: 0.9rem;
+}
+
+.sup-styled-table td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.sup-name-bold {
+    font-weight: 500;
+}
+
+.sup-action-cell {
+    display: flex;
+    gap: 15px;
+}
+
+.sup-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 5px;
+}
+
+.sup-btn-return-full {
+    background-color: #e2e8f0;
+    border: 2px solid #333;
+    border-radius: 30px;
+    padding: 12px;
+    font-weight: bold;
+    font-style: italic;
+    cursor: pointer;
+    width: 100%;
+    margin-top: auto;
+}
+/* Modal Styles to match screenshot */
+.sup-modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 100;
+}
+
+.sup-modal-box {
+    width: 450px;
+    border: 2.5px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.sup-modal-header {
+    background-color: #333;
+    color: white;
+    padding: 12px;
+    font-size: 1.1rem;
+    font-style: italic;
+    text-align: center;
+}
+
+.sup-modal-body {
+    background-color: #9abed6;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.sup-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.sup-form-group label {
+    font-weight: bold;
+    font-style: italic;
+    font-size: 1rem;
+}
+
+.sup-pill-input {
+    background: white;
+    border: 1.5px solid #333;
+    border-radius: 20px;
+    padding: 10px 15px;
+    outline: none;
+    font-family: inherit;
+}
+
+.sup-modal-submit {
+    background-color: #c1e1c1;
+    border: 1.5px solid #333;
+    border-radius: 20px;
+    padding: 12px;
+    font-weight: bold;
+    font-style: italic;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.sup-modal-cancel {
+    background: none;
+    border: none;
+    text-decoration: underline;
+    cursor: pointer;
+    align-self: center;
+    font-style: italic;
+}

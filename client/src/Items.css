@@ -1,0 +1,199 @@
+.items-page {
+  background-color: #9abed6;
+  min-height: 100vh;
+  font-family: 'Times New Roman', serif;
+}
+
+.items-header {
+  background-color: #333;
+  color: white;
+  padding: 10px 20px;
+  border-bottom: 2px solid #000;
+}
+
+.items-title {
+  font-style: italic;
+  margin: 0;
+}
+
+.items-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  height: calc(100vh - 55px);
+  padding: 20px;
+  gap: 20px;
+}
+
+/* SIDEBAR STYLES */
+.items-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding-top: 50px;
+}
+
+.item-action-btn {
+  background-color: #e2e8f0;
+  border: 1px solid #999;
+  border-radius: 30px;
+  padding: 12px;
+  font-size: 1.1rem;
+  font-style: italic;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+}
+
+.search-container {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-input-wrapper {
+  background: white;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  padding: 5px 15px;
+  width: 100%;
+  border: 1px solid #ccc;
+}
+
+.search-bar {
+  border: none;
+  outline: none;
+  padding: 8px;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.search-confirm-btn {
+  background-color: #e2e8f0;
+  border: 1px solid #999;
+  border-radius: 20px;
+  padding: 5px 30px;
+  font-style: italic;
+  cursor: pointer;
+  align-self: flex-end;
+}
+
+.return-btn {
+  margin-top: auto;
+  margin-bottom: 30px;
+}
+
+/* TABLE STYLES */
+.items-main {
+  background: white;
+  border: 2px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.items-table-wrapper {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.items-table th {
+  background-color: #ddd;
+  padding: 12px;
+  text-align: left;
+  border-bottom: 2px solid #333;
+  border-right: 1px solid #aaa;
+  position: sticky;
+  top: 0;
+}
+
+.items-table td {
+  padding: 12px;
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+}
+
+.items-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+/* Previous Styles Remain, Add these for the Pop-up */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+}
+
+.item-modal {
+  width: 500px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #333;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+
+.modal-header-dark {
+  background: #333;
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title-text { font-style: italic; font-family: 'Times New Roman', serif; }
+
+.modal-body-blue {
+  background-color: #9abed6;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.item-form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-form-row label {
+  font-family: 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: bold;
+  font-size: 1.3rem;
+}
+
+.item-input {
+  width: 220px;
+  padding: 8px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.add-item-confirm {
+  align-self: flex-end;
+  margin-top: 10px;
+  padding: 10px 30px;
+  border-radius: 30px;
+  border: 1px solid #999;
+  background: #e2e8f0;
+  font-family: 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.remove-btn-style { background: #ffcccc; }
+.close-x { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }

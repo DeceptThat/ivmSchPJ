@@ -1,0 +1,132 @@
+import { useState, useEffect } from 'react';
+import './Supplier.css';
+
+function Supplier({ onBack }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  
+  const [suppliers, setSuppliers] = useState(() => {
+    const saved = localStorage.getItem('supplierData');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, supplierID: 'S001', name: 'ABC Stationery Co.', contact: '081-234-5678', address: '132, My Street, Bangkok', category: 'Stationery' }
+    ];
+  });
+
+  const [form, setForm] = useState({ name: '', supplierID: '', contact: '', address: '', category: 'Stationery' });
+
+  useEffect(() => {
+    localStorage.setItem('supplierData', JSON.stringify(suppliers));
+  }, [suppliers]);
+
+  const handleOpenAdd = () => {
+    const pass = prompt("Admin Password Required:");
+    if (pass === 'Admin') {
+      setForm({ name: '', supplierID: '', contact: '', address: '', category: 'Stationery' });
+      setShowModal(true);
+    } else {
+      alert("Access Denied");
+    }
+  };
+
+  const handleSave = () => {
+    if (!form.name || !form.supplierID) return alert("Please fill Name and ID");
+    setSuppliers([...suppliers, { ...form, id: Date.now() }]);
+    setShowModal(false);
+  };
+
+  const filtered = suppliers.filter(s => 
+    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    s.supplierID.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="sup-main-wrapper">
+      <header className="sup-top-header">
+        <h1>Suppliers Management</h1>
+      </header>
+
+      <div className="sup-page-content">
+        <div className="sup-nav-row">
+          <div className="sup-search-pill">
+            <span className="sup-search-icon">🔍</span>
+            <input 
+              type="text" 
+              placeholder="Search Supplier Name/ID" 
+              onChange={(e) => setSearchTerm(e.target.value)} 
+            />
+          </div>
+          <button className="sup-btn-add" onClick={handleOpenAdd}>
+            Add Supplier
+          </button>
+        </div>
+
+        <div className="sup-table-container">
+          <table className="sup-styled-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>Supplier Name</th><th>Contact</th><th>Address</th><th>Category</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((s) => (
+                <tr key={s.id}>
+                  <td>{s.supplierID}</td>
+                  <td className="sup-name-bold">{s.name}</td>
+                  <td>{s.contact}</td>
+                  <td>{s.address}</td>
+                  <td>{s.category}</td>
+                  <td className="sup-action-cell">
+                    <button className="sup-icon-btn">✏️</button>
+                    <button className="sup-icon-btn" onClick={() => setSuppliers(suppliers.filter(x => x.id !== s.id))}>🗑️</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <button className="sup-btn-return-full" onClick={onBack}>Return</button>
+      </div>
+
+      {/* --- ADD SUPPLIER MODAL --- */}
+      {showModal && (
+        <div className="sup-modal-overlay">
+          <div className="sup-modal-box">
+            <div className="sup-modal-header">Add Suppliers</div>
+            <div className="sup-modal-body">
+              <div className="sup-form-group">
+                <label>Supplier Name</label>
+                <input className="sup-pill-input" onChange={e => setForm({...form, name: e.target.value})} />
+              </div>
+              <div className="sup-form-group">
+                <label>Supplier ID</label>
+                <input className="sup-pill-input" onChange={e => setForm({...form, supplierID: e.target.value})} />
+              </div>
+              <div className="sup-form-group">
+                <label>Contact</label>
+                <input className="sup-pill-input" onChange={e => setForm({...form, contact: e.target.value})} />
+              </div>
+              <div className="sup-form-group">
+                <label>Address</label>
+                <input className="sup-pill-input" onChange={e => setForm({...form, address: e.target.value})} />
+              </div>
+              <div className="sup-form-group">
+                <label>Category of items</label>
+                <select className="sup-pill-input" onChange={e => setForm({...form, category: e.target.value})}>
+                  <option value="Stationery">Stationery</option>
+                  <option value="Cleaning Supplies">Cleaning Supplies</option>
+                  <option value="Packaging Supplies">Packaging Supplies</option>
+                  <option value="Security Equipment">Security Equipment</option>
+                </select>
+              </div>
+              <button className="sup-modal-submit" onClick={handleSave}>Add Supplier</button>
+              <button className="sup-modal-cancel" onClick={() => setShowModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Supplier;
