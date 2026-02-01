@@ -6,7 +6,6 @@ function Items({ onBack }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
 
-  // --- DATA STATE (Persistent) ---
   const [itemsList, setItemsList] = useState(() => {
     const saved = localStorage.getItem('inventoryData');
     return saved ? JSON.parse(saved) : [
@@ -23,8 +22,6 @@ function Items({ onBack }) {
     localStorage.setItem('inventoryData', JSON.stringify(itemsList));
   }, [itemsList]);
 
-  // --- SEARCH LOGIC ---
-  // This filters based on ID or Name
   const filteredItems = itemsList.filter(item => {
     const search = searchTerm.toLowerCase();
     return (
@@ -74,7 +71,6 @@ function Items({ onBack }) {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            {/* The button is now decorative as the search is automatic */}
             <button className="search-confirm-btn">Search</button>
           </div>
           <button className="item-action-btn return-btn" onClick={onBack}>Return</button>
@@ -112,7 +108,6 @@ function Items({ onBack }) {
         </main>
       </div>
 
-      {/* Modals remain the same as previous functional version */}
       {showAddModal && (
         <div className="modal-overlay">
           <div className="item-modal">

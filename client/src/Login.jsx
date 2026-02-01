@@ -7,13 +7,22 @@ function Login({ onLogin }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Logic: Admin gets full access, Staff gets limited access
-    if (username.toLowerCase() === 'admin' && password === 'Admin123') {
+
+    const savedStaff = JSON.parse(localStorage.getItem('staffData') || "[]");
+
+    if (username === 'admin' && password === 'admin') {
       onLogin('admin');
-    } else if (username && password) {
-      onLogin('staff');
+      return;
+    }
+
+    const foundUser = savedStaff.find(
+      (user) => user.username === username && user.password === password
+    );
+
+    if (foundUser) {
+      onLogin(foundUser.occupation.toLowerCase()); 
     } else {
-      alert("Invalid Credentials");
+      alert("Invalid Username or Password. Please contact Admin.");
     }
   };
 

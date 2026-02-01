@@ -12,6 +12,7 @@ function Sale({ onBack }) {
 
     if (item) {
       const newItem = {
+        cartId: Date.now(), 
         barcode: item.id,
         name: item.name,
         code: item.id,
@@ -26,37 +27,91 @@ function Sale({ onBack }) {
     }
   };
 
+  const removeItem = (idToRemove) => {
+    const updatedCart = cartItems.filter(item => item.cartId !== idToRemove);
+    setCartItems(updatedCart);
+  };
+
+  const handleCompleteSale = () => {
+    if (cartItems.length === 0) return alert("Cart is empty!");
+    alert("Sale Completed Successfully!");
+    setCartItems([]); 
+    setBarcodeInput('');
+  };
+
   const totalAmount = cartItems.reduce((acc, item) => acc + item.total, 0);
 
   return (
     <div className="sale-wrapper">
-      <header className="sale-dark-header"><h2 className="sale-title-italic">Sale Management</h2></header>
+      <header className="sale-dark-header">
+        <h2 className="sale-title-italic">Sale Management</h2>
+      </header>
       <div className="sale-main-content">
         <div className="sale-layout-grid">
           <div className="sale-left-panel">
             <div className="sale-table-container">
               <table className="sale-data-table">
-                <thead><tr><th>Barcode</th><th>Item Name</th><th>Item Code</th><th>Quantity</th><th>Price</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Barcode</th>
+                    <th>Item Name</th>
+                    <th>Item Code</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  {cartItems.map((item, i) => (
-                    <tr key={i}><td>{item.barcode}</td><td>{item.name}</td><td>{item.code}</td><td>{item.qty}</td><td>{item.total} THB</td></tr>
+                  {cartItems.map((item) => (
+                    <tr key={item.cartId}>
+                      <td>{item.barcode}</td>
+                      <td>{item.name}</td>
+                      <td>{item.code}</td>
+                      <td>{item.qty}</td>
+                      <td>{item.total} THB</td>
+                      <td>
+                        <button 
+                          className="sale-remove-btn"
+                          onClick={() => removeItem(item.cartId)}
+                          style={{
+                            background: '#ff4d4d',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '5px 10px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
             </div>
             <div className="sale-total-box">
-              <span className="sale-total-text">Total : <span className="sale-green-val">{totalAmount}</span> THB</span>
+              <span className="sale-total-text">
+                Total : <span className="sale-green-val">{totalAmount}</span> THB
+              </span>
             </div>
           </div>
           <div className="sale-right-panel">
             <div className="sale-scanner-box">
               <div className="sale-input-row">
                 <label className="sale-label-italic">Item Bar Code:</label>
-                <input value={barcodeInput} onChange={(e) => setBarcodeInput(e.target.value)} className="sale-barcode-input" />
+                <input 
+                  value={barcodeInput} 
+                  onChange={(e) => setBarcodeInput(e.target.value)} 
+                  className="sale-barcode-input" 
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddItem()}
+                />
                 <button className="sale-green-btn-sm" onClick={handleAddItem}>Enter</button>
               </div>
             </div>
-            <button className="sale-complete-btn" onClick={() => alert("Sale Completed!")}>Complete Sale</button>
+            <button className="sale-complete-btn" onClick={handleCompleteSale}>
+              Complete Sale
+            </button>
           </div>
         </div>
         <button className="sale-return-pill" onClick={onBack}>Return</button>

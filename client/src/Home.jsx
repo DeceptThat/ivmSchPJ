@@ -17,15 +17,11 @@ function Home({
   const [lowStockItems, setLowStockItems] = useState([]);
 
   useEffect(() => {
-    // 1. Pull Admin Notifications
     const savedNotes = localStorage.getItem('systemNotifications');
     if (savedNotes) setAnnouncements(JSON.parse(savedNotes));
 
-    // 2. Real-time Out of Stock Check
-    // We look at the Stock Ledger to find the latest 'currentStock' for each item
     const stockHistory = JSON.parse(localStorage.getItem('inventoryStock') || "[]");
     
-    // Get unique items and their most recent stock level
     const latestStockMap = {};
     stockHistory.forEach(entry => {
       if (!latestStockMap[entry.itemID]) {
@@ -85,7 +81,6 @@ function Home({
         </div>
 
         <div className="right-column">
-          {/* DYNAMIC NOTIFICATIONS FROM ADMIN */}
           <div className="info-card">
             <h3>Admin Notifications</h3>
             {announcements.length > 0 ? (
@@ -100,7 +95,6 @@ function Home({
             <button className="view-more" onClick={onAdminClick}>Manage</button>
           </div>
 
-          {/* DYNAMIC OUT OF STOCK CHECK */}
           <div className="info-card">
             <h3>Out of Stock</h3>
             {lowStockItems.length > 0 ? (

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Login from './Login'; // New Import
+import Login from './Login';
 import Home from './Home';
 import Admin from './Admin';
 import Report from './Report';
@@ -11,18 +11,13 @@ import Sale from './Sale';
 import './App.css';
 
 function App() {
-  const [userRole, setUserRole] = useState(null); // null = logged out
+  const [userRole, setUserRole] = useState(null); 
   const [view, setView] = useState('home'); 
 
-  // --- 1. LOGIN GATEKEEPER ---
-  // If no userRole, show only Login.jsx. 
-  // We pass 'setUserRole' so Login.jsx can tell App.jsx who logged in.
   if (!userRole) {
     return <Login onLogin={(role) => setUserRole(role)} />;
   }
 
-  // --- 2. NAVIGATION SWITCHBOARD ---
-  // Returns specific page based on the 'view' state
   const renderView = () => {
     switch (view) {
       case 'admin':    return <Admin onBack={() => setView('home')} />;
@@ -34,11 +29,20 @@ function App() {
       case 'checkout': return <Sale onBack={() => setView('home')} />;
       default:         return (
         <Home 
+          userRole={userRole}
           onLogout={() => { setUserRole(null); setView('home'); }} 
           onAdminClick={() => {
-            const pass = prompt("Admin Password:");
-            if (pass === 'Admin') setView('admin');
-            else alert("Access Denied");
+            // Check role first, then secondary password
+            if (userRole === 'admin' || userRole === 'manager') {
+              const secondPass = prompt("Enter Secure Admin Key:");
+              if (secondPass === 'Admin123') { // Set your preferred key here
+                setView('admin');
+              } else {
+                alert("Incorrect Secure Key!");
+              }
+            } else {
+              alert("Access Denied: Admin privileges required.");
+            }
           }}
           onReportClick={() => setView('report')} 
           onItemsClick={() => setView('items')}

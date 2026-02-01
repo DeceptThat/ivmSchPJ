@@ -4,7 +4,7 @@ import './Supplier.css';
 function Supplier({ onBack }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null); // Tracks if we are editing
+  const [editingId, setEditingId] = useState(null); 
   
   const [suppliers, setSuppliers] = useState(() => {
     const saved = localStorage.getItem('supplierData');
@@ -21,8 +21,8 @@ function Supplier({ onBack }) {
 
   const handleOpenAdd = () => {
     const pass = prompt("Admin Password Required:");
-    if (pass === 'Admin') {
-      setEditingId(null); // Reset editing state
+    if (pass === 'Admin123') {
+      setEditingId(null); 
       setForm({ name: '', supplierID: '', contact: '', address: '', itemIDs: '' });
       setShowModal(true);
     } else {
@@ -30,7 +30,7 @@ function Supplier({ onBack }) {
     }
   };
 
-  // Logic to open the modal with existing data
+ 
   const handleEdit = (supplier) => {
     const pass = prompt("Admin Password Required:");
     if (pass === 'Admin') {
@@ -52,10 +52,10 @@ function Supplier({ onBack }) {
     if (!form.name || !form.supplierID) return alert("Please fill Name and ID");
     
     if (editingId) {
-      // Update existing supplier
+      
       setSuppliers(suppliers.map(s => s.id === editingId ? { ...form, id: editingId } : s));
     } else {
-      // Add new supplier
+      
       setSuppliers([...suppliers, { ...form, id: Date.now() }]);
     }
     
@@ -95,7 +95,7 @@ function Supplier({ onBack }) {
                   <td>{s.address}</td>
                   <td>{s.itemIDs}</td>
                   <td className="sup-action-cell">
-                    {/* Fixed Edit Button */}
+                    {}
                     <button className="sup-icon-btn" onClick={() => handleEdit(s)}>✏️</button>
                     <button className="sup-icon-btn" onClick={() => setSuppliers(suppliers.filter(x => x.id !== s.id))}>🗑️</button>
                   </td>
