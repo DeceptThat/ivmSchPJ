@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Admin.css';
 
 function Admin({ onBack }) {
@@ -16,23 +16,75 @@ function Admin({ onBack }) {
     { id: 'SCH01', staffId: 'S001', date: '2026-02-01', time: '08:00 - 16:00' },
   ]);
 
-  // --- RENDER MODAL FIELDS ---
+  // New state for Notifications
+  const [notifications, setNotifications] = useState(() => {
+    const saved = localStorage.getItem('systemNotifications');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [noteForm, setNoteForm] = useState({ message: '', type: 'Info' });
+
+  useEffect(() => {
+    localStorage.setItem('systemNotifications', JSON.stringify(notifications));
+  }, [notifications]);
+
+  const handleAddData = () => {
+    if (activeTab === 'notifications') {
+      if (!noteForm.message) return alert("Please enter a message");
+      const newNote = { 
+        id: Date.now(), 
+        ...noteForm, 
+        timestamp: new Date().toLocaleString() 
+      };
+      setNotifications([newNote, ...notifications]);
+      setNoteForm({ message: '', type: 'Info' });
+    }
+    // (Other add logic for staff/schedule would go here)
+    setShowAddModal(false);
+  };
+
+  const handleRemoveData = (idToRemove) => {
+    if (activeTab === 'notifications') {
+      setNotifications(notifications.filter(n => n.id.toString() !== idToRemove));
+    }
+    setShowRemoveModal(false);
+  };
+
   const renderAddFields = () => {
     if (activeTab === 'staff') {
       return (
         <>
           <div className="modal-row"><label>Staff Name</label><input className="modal-pill" placeholder="Name" /></div>
           <div className="modal-row"><label>Staff ID</label><input className="modal-pill" placeholder="S-XXX" /></div>
-          <div className="modal-row"><label>Contact</label><input className="modal-pill" placeholder="08X-XXX-XXXX" /></div>
-          <div className="modal-row"><label>Username</label><input className="modal-pill" placeholder="user.name" /></div>
         </>
       );
-    } else {
+    } else if (activeTab === 'schedule') {
       return (
         <>
           <div className="modal-row"><label>Schedule ID</label><input className="modal-pill" placeholder="SCH-XXX" /></div>
           <div className="modal-row"><label>Date</label><input className="modal-pill" type="date" /></div>
-          <div className="modal-row"><label>Staff ID</label><input className="modal-pill" placeholder="S-XXX" /></div>
+        </>
+      );
+    } else if (activeTab === 'notifications') {
+      return (
+        <>
+          <div className="modal-row">
+            <label>Level</label>
+            <select className="modal-pill" onChange={e => setNoteForm({...noteForm, type: e.target.value})}>
+              <option value="Info">ℹ️ Info</option>
+              <option value="Warning">⚠️ Warning</option>
+              <option value="Urgent">🚨 Urgent</option>
+            </select>
+          </div>
+          <div className="modal-row">
+            <label>Message</label>
+            <textarea 
+              className="modal-pill" 
+              placeholder="Type notification here..."
+              onChange={e => setNoteForm({...noteForm, message: e.target.value})}
+              style={{height: '80px', paddingTop: '10px'}}
+            />
+          </div>
         </>
       );
     }
@@ -51,6 +103,7 @@ function Admin({ onBack }) {
             <p className="nav-label">Navigation :</p>
             <button className={`nav-item ${activeTab === 'staff' ? 'active' : ''}`} onClick={() => setActiveTab('staff')}>👤 Staff</button>
             <button className={`nav-item ${activeTab === 'schedule' ? 'active' : ''}`} onClick={() => setActiveTab('schedule')}>🕒 Schedule</button>
+            <button className={`nav-item ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => setActiveTab('notifications')}>🔔 Notifications</button>
             <button className={`nav-item ${activeTab === 'logs' ? 'active' : ''}`} onClick={() => setActiveTab('logs')}>📝 Logs</button>
           </div>
 
@@ -75,6 +128,11 @@ function Admin({ onBack }) {
                   <thead><tr><th>Sched ID</th><th>Staff ID</th><th>Date</th><th>Time Slot</th></tr></thead>
                   <tbody>{scheduleList.map((sch, i) => (<tr key={i}><td>{sch.id}</td><td>{sch.staffId}</td><td>{sch.date}</td><td>{sch.time}</td></tr>))}</tbody>
                 </>
+              ) : activeTab === 'notifications' ? (
+                <>
+                  <thead><tr><th>ID</th><th>Type</th><th>Message</th><th>Timestamp</th></tr></thead>
+                  <tbody>{notifications.map((n, i) => (<tr key={i}><td>{n.id}</td><td>{n.type}</td><td>{n.message}</td><td>{n.timestamp}</td></tr>))}</tbody>
+                </>
               ) : (
                 <thead><tr><th>Log ID</th><th>User</th><th>Action</th><th>Timestamp</th></tr></thead>
               )}
@@ -83,7 +141,6 @@ function Admin({ onBack }) {
         </main>
       </div>
 
-      {/* --- ADD MODAL --- */}
       {showAddModal && (
         <div className="modal-overlay">
           <div className="modal-box">
@@ -93,13 +150,12 @@ function Admin({ onBack }) {
             </div>
             <div className="modal-body">
               {renderAddFields()}
-              <button className="modal-submit-btn" onClick={() => setShowAddModal(false)}>+ Confirm Add</button>
+              <button className="modal-submit-btn" onClick={handleAddData}>+ Confirm Add</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* --- REMOVE MODAL --- */}
       {showRemoveModal && (
         <div className="modal-overlay">
           <div className="modal-box remove-box">
@@ -108,12 +164,11 @@ function Admin({ onBack }) {
               <button className="close-x" onClick={() => setShowRemoveModal(false)}>×</button>
             </div>
             <div className="modal-body">
-              <p className="remove-warning">Enter the ID to delete from the system:</p>
+              <p className="remove-warning">Enter ID to delete:</p>
               <div className="modal-row">
-                <label>{activeTab === 'staff' ? 'Staff ID' : 'Sched ID'}</label>
-                <input className="modal-pill" placeholder="Enter ID here" />
+                <input className="modal-pill" id="removeID" placeholder="Enter ID here" />
               </div>
-              <button className="modal-submit-btn remove-confirm" onClick={() => setShowRemoveModal(false)}>
+              <button className="modal-submit-btn remove-confirm" onClick={() => handleRemoveData(document.getElementById('removeID').value)}>
                 Confirm Remove
               </button>
             </div>

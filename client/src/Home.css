@@ -193,3 +193,34 @@
 .btn-action:hover {
   filter: brightness(0.9);
 }
+.home-alerts {
+  padding: 20px 40px 0 40px;
+}
+
+.alert-banner {
+  display: flex;
+  align-items: center;
+  padding: 15px 25px;
+  border-radius: 12px;
+  border: 2px solid #333;
+  box-shadow: 4px 4px 0px #333;
+  margin-bottom: 10px;
+}
+
+.alert-info { background-color: #d1ecf1; border-color: #0c5460; }
+.alert-warning { background-color: #fff3cd; border-color: #856404; }
+.alert-urgent { 
+  background-color: #f8d7da; 
+  border-color: #721c24; 
+  animation: pulse-red 2s infinite;
+}
+
+.alert-icon { font-size: 1.5rem; margin-right: 15px; }
+.alert-msg { font-weight: bold; margin: 0; color: #333; }
+.alert-time { font-size: 0.75rem; color: #666; }
+
+@keyframes pulse-red {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.01); }
+  100% { transform: scale(1); }
+}

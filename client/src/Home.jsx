@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import './Home.css';
 
@@ -12,6 +13,30 @@ function Home({
   onLogout, onAdminClick, onReportClick, onItemsClick, 
   onStockClick, onScheduleClick, onSupplierClick, onCheckOutClick 
 }) {
+  const [announcements, setAnnouncements] = useState([]);
+  const [lowStockItems, setLowStockItems] = useState([]);
+
+  useEffect(() => {
+    // 1. Pull Admin Notifications
+    const savedNotes = localStorage.getItem('systemNotifications');
+    if (savedNotes) setAnnouncements(JSON.parse(savedNotes));
+
+    // 2. Real-time Out of Stock Check
+    // We look at the Stock Ledger to find the latest 'currentStock' for each item
+    const stockHistory = JSON.parse(localStorage.getItem('inventoryStock') || "[]");
+    
+    // Get unique items and their most recent stock level
+    const latestStockMap = {};
+    stockHistory.forEach(entry => {
+      if (!latestStockMap[entry.itemID]) {
+        latestStockMap[entry.itemID] = entry;
+      }
+    });
+
+    const outOfStock = Object.values(latestStockMap).filter(item => item.currentStock <= 0);
+    setLowStockItems(outOfStock);
+  }, []);
+
   return (
     <div className="dashboard-page">
       <header className="dashboard-header">
@@ -60,15 +85,34 @@ function Home({
         </div>
 
         <div className="right-column">
+          {/* DYNAMIC NOTIFICATIONS FROM ADMIN */}
           <div className="info-card">
-            <h3>Reminder</h3>
-            <div className="card-item">Next Monday: Staff Holiday</div>
-            <button className="view-more">View More</button>
+            <h3>Admin Notifications</h3>
+            {announcements.length > 0 ? (
+              announcements.slice(0, 2).map(note => (
+                <div key={note.id} className={`card-item note-${note.type.toLowerCase()}`}>
+                  {note.type === 'Urgent' ? '🚨 ' : '🔔 '} {note.message}
+                </div>
+              ))
+            ) : (
+              <div className="card-item">No new updates.</div>
+            )}
+            <button className="view-more" onClick={onAdminClick}>Manage</button>
           </div>
+
+          {/* DYNAMIC OUT OF STOCK CHECK */}
           <div className="info-card">
             <h3>Out of Stock</h3>
-            <div className="card-item">Aero Pen (0)</div>
-            <button className="view-more" onClick={onStockClick}>View More</button>
+            {lowStockItems.length > 0 ? (
+              lowStockItems.slice(0, 3).map((item, idx) => (
+                <div key={idx} className="card-item stock-alert">
+                  ⚠️ {item.itemName} ({item.currentStock})
+                </div>
+              ))
+            ) : (
+              <div className="card-item all-clear">✅ All items in stock</div>
+            )}
+            <button className="view-more" onClick={onStockClick}>Restock Now</button>
           </div>
         </div>
       </div>

@@ -3,54 +3,41 @@ import './Stock.css';
 
 function Stock({ onBack }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [modalType, setModalType] = useState(null); // 'IN', 'OUT', or null
-  
-  const [masterItems, setMasterItems] = useState(() => {
-    const saved = localStorage.getItem('itemsData');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const [modalType, setModalType] = useState(null); 
   const [stockData, setStockData] = useState(() => {
     const saved = localStorage.getItem('inventoryStock');
     return saved ? JSON.parse(saved) : [];
   });
-
-  const [form, setForm] = useState({ refNo: '', itemID: '', name: '', qty: '', supplier: '', expDate: '' });
+  const [form, setForm] = useState({ refNo: '', itemID: '', diffQty: '', supplier: '', expDate: '' });
 
   useEffect(() => {
     localStorage.setItem('inventoryStock', JSON.stringify(stockData));
-    localStorage.setItem('itemsData', JSON.stringify(masterItems));
-  }, [stockData, masterItems]);
+  }, [stockData]);
 
   const handleTransaction = () => {
-    const changeQty = parseInt(form.qty) || 0;
-    const enteredID = form.itemID.trim().toUpperCase();
+    const enteredID = form.itemID.toString().trim().toUpperCase();
+    const diff = parseInt(form.diffQty) || 0;
+    const inventoryData = JSON.parse(localStorage.getItem('inventoryData') || "[]");
+    const masterItem = inventoryData.find(i => i.id.toString().trim().toUpperCase() === enteredID);
 
-    // Update Master Catalog Total
-    const itemIndex = masterItems.findIndex(i => i.id.toUpperCase() === enteredID);
-    let currentBalance = 0;
-
-    if (itemIndex !== -1) {
-      const updatedMaster = [...masterItems];
-      const oldQty = parseInt(updatedMaster[itemIndex].quantity) || 0;
-      // Subtract if Stock Out, Add if Stock In
-      currentBalance = modalType === 'OUT' ? oldQty - changeQty : oldQty + changeQty;
-      updatedMaster[itemIndex].quantity = currentBalance;
-      setMasterItems(updatedMaster);
+    if (!masterItem) {
+      alert(`Error: Item ID "${enteredID}" not found in Master Items!`);
+      return;
     }
 
-    const transactionEntry = { 
-      ...form, 
-      itemID: enteredID,
-      type: modalType, 
-      qty: changeQty,
-      balanceAfter: currentBalance,
+    const lastEntry = stockData.find(s => s.itemID === enteredID);
+    const previousBalance = lastEntry ? lastEntry.currentStock : 0;
+    const newBalance = modalType === 'OUT' ? previousBalance - diff : previousBalance + diff;
+
+    const newEntry = { 
+      ...form, itemID: enteredID, itemName: masterItem.name, 
+      type: modalType, diffQty: diff, currentStock: newBalance,
       transDate: new Date().toISOString().split('T')[0] 
     };
 
-    setStockData([transactionEntry, ...stockData]);
+    setStockData([newEntry, ...stockData]);
     setModalType(null);
-    setForm({ refNo: '', itemID: '', name: '', qty: '', supplier: '', expDate: '' });
+    setForm({ refNo: '', itemID: '', diffQty: '', supplier: '', expDate: '' });
   };
 
   return (
@@ -60,59 +47,57 @@ function Stock({ onBack }) {
         <div className="stk-search-bar">
           <div className="stk-search-pill">
             <span>🔍</span>
-            <input placeholder="item name / ref no" onChange={(e) => setSearchTerm(e.target.value)} />
+            <input 
+              placeholder="Search ID / Name / Ref No" 
+              onChange={(e) => setSearchTerm(e.target.value)} 
+            />
           </div>
-          <button className="stk-search-btn">Search</button>
         </div>
-
         <div className="stk-grid">
           <div className="stk-table-container">
             <table className="stk-table">
               <thead>
                 <tr>
-                  <th>Ref No.</th><th>Item ID</th><th>Item Name</th><th>Type</th><th>Qty</th><th>Date</th><th>Exp Date</th><th>Supplier</th>
+                  <th>Ref No.</th><th>Item ID</th><th>Item Name</th><th>Type</th>
+                  <th>Difference</th><th>Date</th><th>Exp Date</th><th>Current Stock</th>
                 </tr>
               </thead>
               <tbody>
-                {stockData.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase())).map((item, index) => (
+                {stockData.filter(s => 
+                  // Expanded Search Logic
+                  s.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  s.itemID.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  (s.refNo && s.refNo.toString().toLowerCase().includes(searchTerm.toLowerCase()))
+                ).map((item, index) => (
                   <tr key={index}>
-                    <td>{item.refNo}</td><td>{item.itemID}</td><td>{item.name}</td>
-                    <td className={item.type === 'OUT' ? 'stk-text-out' : ''}>{item.type}</td>
-                    <td>{item.qty}</td><td>{item.transDate}</td><td>{item.expDate}</td><td>{item.supplier}</td>
+                    <td>{item.refNo}</td><td>{item.itemID}</td><td>{item.itemName}</td>
+                    <td className={item.type === 'OUT' ? 'stk-text-out' : 'stk-text-in'}>{item.type}</td>
+                    <td className="stk-bold">{item.type === 'OUT' ? `-${item.diffQty}` : `+${item.diffQty}`}</td>
+                    <td>{item.transDate}</td><td>{item.expDate || '-'}</td>
+                    <td className="stk-current-stock">{item.currentStock}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <div className="stk-side-actions">
-            <button className="stk-action-btn" onClick={() => setModalType('IN')}>Stock in</button>
-            <button className="stk-action-btn" onClick={() => setModalType('OUT')}>Stock out</button>
+            <button className="stk-action-btn stk-btn-in" onClick={() => setModalType('IN')}>Stock in</button>
+            <button className="stk-action-btn stk-btn-out" onClick={() => setModalType('OUT')}>Stock out</button>
             <button className="stk-return-pill" onClick={onBack}>Return</button>
           </div>
         </div>
       </div>
 
-      {/* --- TRANSACTION MODAL (Shared for IN and OUT) --- */}
       {modalType && (
         <div className="stk-modal-overlay">
           <div className="stk-modal-box">
-            <h3 className="stk-modal-title">Stock {modalType === 'IN' ? 'In' : 'Out'} - Entry</h3>
-            
-            <div className="stk-field"><label>Ref No</label><input value={form.refNo} onChange={e => setForm({...form, refNo: e.target.value})}/></div>
-            <div className="stk-field"><label>Item ID</label><input value={form.itemID} placeholder="e.g. S001" onChange={e => setForm({...form, itemID: e.target.value})}/></div>
-            <div className="stk-field"><label>Item Name</label><input value={form.name} placeholder="Type Name" onChange={e => setForm({...form, name: e.target.value})} /></div>
-            <div className="stk-field"><label>Quantity</label><input type="number" value={form.qty} onChange={e => setForm({...form, qty: e.target.value})}/></div>
-            
-            {/* Show supplier/exp only for Stock In */}
-            {modalType === 'IN' && (
-              <>
-                <div className="stk-field"><label>Supplier</label><input value={form.supplier} onChange={e => setForm({...form, supplier: e.target.value})}/></div>
-                <div className="stk-field"><label>Exp Date</label><input type="date" onChange={e => setForm({...form, expDate: e.target.value})}/></div>
-              </>
-            )}
-            
+            <h3 className="stk-modal-title">Stock {modalType}</h3>
+            <div className="stk-field"><label>Ref No</label><input onChange={e => setForm({...form, refNo: e.target.value})}/></div>
+            <div className="stk-field"><label>Item ID</label><input placeholder="e.g. 001" onChange={e => setForm({...form, itemID: e.target.value})}/></div>
+            <div className="stk-field"><label>Difference</label><input type="number" onChange={e => setForm({...form, diffQty: e.target.value})}/></div>
+            {modalType === 'IN' && <div className="stk-field"><label>Exp Date</label><input type="date" onChange={e => setForm({...form, expDate: e.target.value})}/></div>}
             <div className="stk-modal-footer">
-              <button className="stk-confirm-btn" onClick={handleTransaction}>Confirm Stock {modalType === 'IN' ? 'In' : 'Out'}</button>
+              <button className="stk-confirm-btn" onClick={handleTransaction}>Confirm</button>
               <button className="stk-cancel-link" onClick={() => setModalType(null)}>Cancel</button>
             </div>
           </div>
