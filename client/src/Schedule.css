@@ -1,84 +1,144 @@
+/* --- Root Layout --- */
 .schedule-page {
-  background-color: #9abed6;
-  min-height: 100vh;
-  font-family: 'Times New Roman', serif;
-}
-
-.schedule-header {
-  background-color: #333;
-  color: white;
-  padding: 10px 25px;
-  border-bottom: 2px solid #000;
-}
-
-.schedule-title { font-style: italic; margin: 0; }
-
-.schedule-container {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  height: calc(100vh - 55px);
-  padding: 25px;
-  gap: 25px;
-}
-
-.schedule-sidebar {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 20px 0;
-}
-
-.search-pill {
-  background: white;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  padding: 8px 15px;
-  border: 1px solid #333;
-  margin-bottom: 10px;
-}
-
-.search-pill input {
-  border: none;
-  outline: none;
-  width: 100%;
-  padding-left: 10px;
-}
-
-.side-action-btn {
-  background: #e2e8f0;
-  border: 1px solid #333;
-  border-radius: 25px;
-  padding: 10px;
-  font-weight: bold;
-  font-style: italic;
-  cursor: pointer;
-  width: 150px;
-  align-self: center;
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-}
-
-.schedule-main {
-  background: white;
-  border: 2px solid #333;
-  border-radius: 10px;
+  height: 100vh;
+  background-color: #94a3b8; /* Matching the blue-grey in Stock screenshot */
+  font-family: 'Inter', system-ui, sans-serif;
   overflow: hidden;
 }
 
-.schedule-table-wrapper { height: 100%; overflow-y: auto; }
-
-.schedule-table { width: 100%; border-collapse: collapse; }
-
-.schedule-table th {
-  background: #eee;
-  padding: 15px;
-  text-align: left;
-  border-bottom: 2px solid #333;
-  position: sticky;
-  top: 0;
+/* --- Sidebar Design --- */
+.schedule-sidebar {
+  width: 260px;
+  background-color: #94a3b8; /* Integrated with page color */
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  color: white;
 }
 
-.schedule-table td {
+.sidebar-pill {
+  background: white;
+  color: #1a1a1a;
+  padding: 12px;
+  border-radius: 20px;
+  text-align: center;
+  font-weight: 800;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.side-action-btn.return-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+  cursor: pointer;
+  font-style: italic;
+}
+
+/* --- Main Content --- */
+.schedule-main-content {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-main-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 30px;
+  font-family: 'Georgia', serif; /* Matching the Stock Movement History font style */
+}
+
+/* --- Form & Table Cards --- */
+.schedule-card, .schedule-table-scroll-box {
+  background: white;
+  border-radius: 10px;
+  padding: 0; /* Let the table header handle padding */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.schedule-assignment-form {
+  display: flex;
+  padding: 20px;
+  gap: 15px;
+  align-items: flex-end;
+}
+
+.schedule-pill {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px; /* Pill style matching sidebar */
+  outline: none;
+}
+
+.assign-btn {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* --- Table Design Matching Stock History --- */
+.schedule-data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.schedule-data-table thead tr {
+  background-color: #333; /* Dark header from Stock screenshot */
+  color: white;
+}
+
+.schedule-data-table th {
   padding: 15px;
-  border-bottom: 1px solid #ddd;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.schedule-data-table td {
+  padding: 18px 15px;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: center;
+  color: #333;
+}
+
+.schedule-data-table tr:hover {
+  background-color: #f8fafc;
+}
+
+.staff-cell { font-weight: 700; }
+
+.shift-badge {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+/* Matching the SOLD/IN color pattern */
+.shift-badge.morning { color: #3b82f6; }
+.shift-badge.afternoon { color: #8b5cf6; }
+.shift-badge.night { color: #ef4444; }
+
+.delete-row-btn {
+  color: #ef4444;
+  background: none;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
 }

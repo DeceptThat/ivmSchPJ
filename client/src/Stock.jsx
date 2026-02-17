@@ -1,177 +1,230 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import './Stock.css';
 
-function Stock({ onBack }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [modalType, setModalType] = useState(null); 
-  
-  // --- 1. SAFE DATA LOADING ---
-  const [stockData, setStockData] = useState(() => {
-    try {
-      const saved = localStorage.getItem('inventoryStock');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      console.error("Failed to parse stock data:", e);
-      return [];
+function Stock({ onBack, user: propUser }) {
+  const [user] = useState(() => {
+    if (propUser && propUser.staff_id) return propUser;
+    const saved = localStorage.getItem('user');
+    if (saved && saved !== "undefined" && saved !== "null") {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
     }
+    return null;
   });
 
-  const [form, setForm] = useState({ refNo: '', itemID: '', diffQty: '', supplier: '', expDate: '' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [modalStep, setModalStep] = useState(1); 
+  const [stockData, setStockData] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
 
-  // Save to localStorage whenever data changes
-  useEffect(() => {
-    localStorage.setItem('inventoryStock', JSON.stringify(stockData));
-  }, [stockData]);
+  const [form, setForm] = useState({ 
+    refNo: '', 
+    itemID: '', 
+    diffQty: '', 
+    expDate: '', 
+    type: '',
+    supplier: '' 
+  });
 
-  // --- 2. REMOVE INDIVIDUAL ENTRY ---
-  const removeEntry = (indexToRemove) => {
-    if (window.confirm("Are you sure you want to remove this specific entry? This will help clean up data errors.")) {
-      // Filter the array by index to remove only the clicked row
-      const updatedData = stockData.filter((_, index) => index !== indexToRemove);
-      setStockData(updatedData);
-    }
-  };
-
-  // --- 3. TRANSACTION LOGIC ---
-  const handleTransaction = () => {
-    const enteredID = form.itemID?.toString().trim().toUpperCase();
-    const diff = parseInt(form.diffQty) || 0; // Force to number
-    
-    let inventoryData = [];
+  const fetchMovements = async () => {
     try {
-      inventoryData = JSON.parse(localStorage.getItem('inventoryData') || "[]");
-    } catch (e) { inventoryData = []; }
-
-    const masterItem = inventoryData.find(i => i.id?.toString().trim().toUpperCase() === enteredID);
-
-    if (!masterItem) {
-      alert(`Error: Item ID "${enteredID}" not found in Master Items!`);
-      return;
+      const res = await axios.get('http://localhost:5000/api/auth/movement-list');
+      setStockData(res.data || []);
+    } catch (err) {
+      console.error("Fetch error:", err);
     }
-
-    // Get the latest balance from the top of the list
-    const lastEntry = stockData[0]; 
-    const previousBalance = Number(lastEntry?.currentStock) || 0; 
-    const newBalance = modalType === 'OUT' ? previousBalance - diff : previousBalance + diff;
-
-    const newEntry = { 
-      refNo: form.refNo || "N/A",
-      itemID: enteredID, 
-      itemName: masterItem.name || "Unknown Item", 
-      type: modalType, 
-      diffQty: diff, 
-      currentStock: newBalance,
-      transDate: new Date().toISOString().split('T')[0],
-      expDate: form.expDate || "-"
-    };
-
-    setStockData([newEntry, ...stockData]);
-    setModalType(null);
-    setForm({ refNo: '', itemID: '', diffQty: '', supplier: '', expDate: '' });
   };
 
-  // --- 4. SAFE FILTERING ---
-  const filteredRows = Array.isArray(stockData) ? stockData.filter(s => {
-    const search = searchTerm.toLowerCase();
-    return (
-      (s.itemName?.toLowerCase().includes(search)) ||
-      (s.itemID?.toLowerCase().includes(search)) ||
-      (s.refNo?.toString().toLowerCase().includes(search))
-    );
-  }) : [];
+  const fetchSuppliers = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/auth/supplier-list');
+      setSuppliers(res.data || []);
+    } catch (err) {
+      console.error("Supplier fetch error:", err);
+    }
+  };
+
+  useEffect(() => { 
+    fetchMovements(); 
+    fetchSuppliers();
+  }, []);
+
+  const selectType = (selectedType) => {
+    setForm({ ...form, type: selectedType });
+    setModalStep(2);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setModalStep(1);
+    setForm({ refNo: '', itemID: '', diffQty: '', expDate: '', type: '', supplier: '' });
+  };
+
+  const handleTransaction = async () => {
+    const activeId = (user && typeof user.staff_id !== 'undefined') ? user.staff_id : user?.id;
+    if (!activeId) return alert("Session Error: Please re-login.");
+    if (!form.itemID || !form.diffQty) return alert("SKU and Quantity are required.");
+    if (form.type === 'IN' && !form.supplier) return alert("Please select a supplier for Stock IN.");
+
+    try {
+      await axios.post('http://localhost:5000/api/auth/add-movement', {
+        sku: form.itemID.trim(),
+        staff_id: activeId,
+        type: form.type,
+        quantity: parseInt(form.diffQty),
+        expire_date: form.type === 'IN' ? form.expDate : null,
+        supplier_name: form.type === 'IN' ? form.supplier : null,
+        ref_no: form.refNo || "N/A",
+        date: new Date()
+      });
+      await fetchMovements();
+      closeModal();
+      alert("Stock updated!");
+    } catch (err) {
+      alert("Error: " + (err.response?.data?.message || "Check SKU"));
+    }
+  };
+
+  const filteredData = stockData.filter(s => 
+    s.sku.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (s.ref_no && s.ref_no.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
-    <div className="stk-wrapper">
-      <div className="stk-dark-header">Stock Management</div>
-      <div className="stk-body">
-        <div className="stk-search-bar">
-          <div className="stk-search-pill">
-            <span>🔍</span>
+    <div className="stock-page">
+      <aside className="stock-sidebar">
+        <div className="sidebar-upper-stack">
+          <button className="side-action-btn primary" onClick={() => setShowModal(true)}>
+            + New Entry
+          </button>
+          
+          <div className="search-box-container">
+            <span className="search-icon">🔍</span>
             <input 
-              placeholder="Search ID / Name / Ref No" 
+              type="text" 
+              placeholder="Search SKU or Ref..." 
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)} 
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="sidebar-search-input"
             />
           </div>
+
+          <button className="side-action-btn return-btn" onClick={onBack}>
+            Return to Dashboard
+          </button>
         </div>
-        
-        <div className="stk-grid">
-          <div className="stk-table-container">
-            <table className="stk-table">
-              <thead>
-                <tr>
-                  <th>Ref No.</th><th>Item ID</th><th>Item Name</th><th>Type</th>
-                  <th>Difference</th><th>Date</th><th>Exp Date</th><th>Current Stock</th>
-                  <th>Action</th> {/* New Column Header */}
+      </aside>
+
+      <main className="stock-main-content">
+        <div className="table-title-area">
+          <h2 className="page-main-title">Stock Movement History</h2>
+        </div>
+
+        <div className="stock-table-scroll-box">
+          <table className="stock-data-table">
+            <thead>
+              <tr>
+                <th>Ref</th>
+                <th>Staff</th>
+                <th>SKU</th>
+                <th>Type</th>
+                <th>Qty</th>
+                <th>Supplier</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredData.map((item) => (
+                <tr key={item.movement_id}>
+                  <td className="ref-cell">{item.ref_no}</td>
+                  <td>{item.Staff?.staff_name || 'System'}</td>
+                  <td className="sku-cell">{item.sku}</td>
+                  <td className={`type-cell ${item.type.toLowerCase()}`}>
+                    {item.type}
+                  </td>
+                  <td>{item.quantity}</td>
+                  <td className="supplier-cell">
+                    {item.type === 'IN' ? (item.supplier_name || 'N/A') : '-'}
+                  </td>
+                  <td>{new Date(item.date).toLocaleDateString()}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredRows.length > 0 ? (
-                  filteredRows.map((item, index) => (
-                    <tr key={index}>
-                      <td>{item.refNo}</td><td>{item.itemID}</td><td>{item.itemName}</td>
-                      <td className={item.type === 'OUT' ? 'stk-text-out' : 'stk-text-in'}>{item.type}</td>
-                      <td className="stk-bold">{item.type === 'OUT' ? `-${item.diffQty}` : `+${item.diffQty}`}</td>
-                      <td>{item.transDate}</td><td>{item.expDate || '-'}</td>
-                      <td className="stk-current-stock" style={{fontWeight: 'bold'}}>
-                         {/* Display 0 if value is NaN */}
-                        {isNaN(item.currentStock) ? "0" : item.currentStock}
-                      </td>
-                      <td>
-                        <button 
-                          className="stk-remove-btn"
-                          onClick={() => removeEntry(index)}
-                          style={{
-                            backgroundColor: '#ff4d4d',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            padding: '4px 8px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan="9" style={{textAlign: 'center', padding: '20px'}}>No records found</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="stk-side-actions">
-            <button className="stk-action-btn stk-btn-in" onClick={() => setModalType('IN')}>Stock in</button>
-            <button className="stk-action-btn stk-btn-out" onClick={() => setModalType('OUT')}>Stock out</button>
-            <button className="stk-return-pill" onClick={onBack}>Return</button>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
+      </main>
 
-      {modalType && (
-        <div className="stk-modal-overlay">
-          <div className="stk-modal-box">
-            <h3 className="stk-modal-title">Stock {modalType}</h3>
-            <div className="stk-field"><label>Ref No</label>
-              <input value={form.refNo} onChange={e => setForm({...form, refNo: e.target.value})}/>
-            </div>
-            <div className="stk-field"><label>Item ID</label>
-              <input value={form.itemID} placeholder="e.g. 001" onChange={e => setForm({...form, itemID: e.target.value})}/>
-            </div>
-            <div className="stk-field"><label>Difference</label>
-              <input type="number" value={form.diffQty} onChange={e => setForm({...form, diffQty: e.target.value})}/>
-            </div>
-            {modalType === 'IN' && (
-              <div className="stk-field"><label>Exp Date</label>
-                <input type="date" value={form.expDate} onChange={e => setForm({...form, expDate: e.target.value})}/>
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            {modalStep === 1 ? (
+              <div style={{ textAlign: 'center' }}>
+                <h3 className="modal-title">Choose Transaction</h3>
+                <div className="modal-type-grid">
+                  <button onClick={() => selectType('IN')}>📈 Stock In</button>
+                  <button onClick={() => selectType('SOLD')}>💰 Sale</button>
+                  <button onClick={() => selectType('DAMAGED')}>⚠️ Damaged</button>
+                  <button onClick={() => selectType('EXPIRE')}>📅 Expired</button>
+                  <button onClick={() => selectType('FOC')}>🎁 FOC</button>
+                </div>
+                <button onClick={closeModal} className="modal-btn-cancel text-only">Cancel</button>
+              </div>
+            ) : (
+              <div>
+                <h3 className="modal-title">Recording: {form.type}</h3>
+                <div className="modal-form-stack">
+                  <div className="input-group">
+                    <label>Ref #:</label>
+                    <input className="modal-pill" value={form.refNo} onChange={e => setForm({...form, refNo: e.target.value})} placeholder="Invoice/Batch" />
+                  </div>
+                  
+                  {form.type === 'IN' && (
+                    <div className="input-group">
+                      <label>Supplier:</label>
+                      <select 
+                        className="modal-pill"
+                        value={form.supplier} 
+                        onChange={e => setForm({...form, supplier: e.target.value})}
+                      >
+                        <option value="">-- Select --</option>
+                        {suppliers.map(sup => (
+                          <option key={sup.supplier_id} value={sup.supplier_name}>{sup.supplier_name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="input-group">
+                    <label>Item SKU:</label>
+                    <input className="modal-pill" value={form.itemID} onChange={e => setForm({...form, itemID: e.target.value})} placeholder="Enter SKU" />
+                  </div>
+                  
+                  <div className="input-group">
+                    <label>Quantity:</label>
+                    <input className="modal-pill" type="number" value={form.diffQty} onChange={e => setForm({...form, diffQty: e.target.value})} placeholder="0" />
+                  </div>
+                  
+                  {form.type === 'IN' && (
+                    <div className="input-group">
+                      <label>Expiry Date:</label>
+                      <input className="modal-pill" type="date" value={form.expDate} onChange={e => setForm({...form, expDate: e.target.value})} />
+                    </div>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button className="modal-btn-back" onClick={() => setModalStep(1)}>← Back</button>
+                  <div className="footer-right">
+                    <button className="modal-btn-cancel" onClick={closeModal}>Cancel</button>
+                    <button className="modal-btn-confirm" onClick={handleTransaction}>Confirm</button>
+                  </div>
+                </div>
               </div>
             )}
-            <div className="stk-modal-footer">
-              <button className="stk-confirm-btn" onClick={handleTransaction}>Confirm</button>
-              <button className="stk-cancel-link" onClick={() => setModalType(null)}>Cancel</button>
-            </div>
           </div>
         </div>
       )}

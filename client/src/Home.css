@@ -1,226 +1,127 @@
+:root {
+  --primary-blue: #3b82f6;
+  --bg-blue: #9eb5c7;
+  --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
 
 .dashboard-page {
-  background-color: #9abed6; 
+  background-color: var(--bg-blue);
   min-height: 100vh;
-  padding: 20px;
-  font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
 }
 
 .dashboard-header {
-  margin-bottom: 20px;
-  border-bottom: 2px solid #555;
-  padding-bottom: 10px;
-}
-
-.header-content {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-}
-
-
-.dashboard-main {
-  display: flex;
-  gap: 20px;
-  align-items: stretch; 
-  flex: 1;
-}
-
-
-.left-column {
-  flex: 7;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.upper-stack {
-  display: flex;
-  gap: 15px;
-  background-color: #cbd5e0; 
-  padding: 20px;
-  border-radius: 20px;
-  height: 400px; 
-}
-
-.chart-box-container {
-  flex: 8; 
-  background: white;
-  border: 1px solid #000;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 20px; 
+  padding: 1rem 3rem;
+  background: transparent;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
 }
 
-.stats-side-container {
-  flex: 2; 
+.system-title { font-size: 1.8rem; font-weight: 800; }
+
+.dashboard-grid {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
-  justify-content: center;
-}
-
-.stat-highlight {
-  background: #e2e8f0;
-  padding: 15px;
-  font-size: 14px;
-  font-weight: bold;
-  border-radius: 5px;
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-  text-align: center;
-}
-
-.green-val { color: #2d8a39; }
-.red-val { color: #c53030; }
-
-
-.button-row {
+  padding: 2rem 3rem;
+  gap: 2rem;
   flex: 1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: center;
-  align-items: center; 
 }
 
-.btn-action {
-  padding: 12px 25px;
-  border-radius: 20px;
-  border: none;
-  background: #cbd5e0;
-  cursor: pointer;
-  font-weight: bold;
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-  transition: background 0.3s;
-}
-
-.btn-action:hover {
-  background: #b8c2cc;
-}
-
-.btn-action.checkout {
-  background-color: #4ade80; 
-  padding: 18px 45px;      
-  font-size: 1.1rem;
-}
-
-
-.right-column {
+/* --- Left Section (Chart & Buttons) --- */
+.main-chart-section {
   flex: 3;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 1.5rem;
 }
 
-.info-card {
-  flex: 1; 
+.chart-container {
   background: white;
   border-radius: 20px;
-  padding: 20px;
-  text-align: center;
+  padding: 1.5rem;
+  box-shadow: var(--card-shadow);
+  height: 400px; /* Fixed height for consistent look */
+}
+
+.chart-box { height: 320px; width: 100%; }
+
+.action-button-grid {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: 12px;
+  border: none;
+  background: white;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.nav-btn.checkout { background: #10b981; color: white; flex-grow: 1.5; }
+.nav-btn:hover { transform: translateY(-3px); }
+
+/* --- Right Section (Alerts) --- */
+.side-alert-section {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  gap: 1.5rem;
 }
 
-.info-card h3 {
-  margin-top: 0;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-}
-
-.card-item {
-  background: #f1f5f9;
-  margin: 8px 0;
-  padding: 12px;
-  border-radius: 8px;
-}
-
-.view-more {
-  margin-top: auto; 
-  align-self: center;
-  background: #cbd5e0;
-  border: none;
-  padding: 8px 20px;
+.small-alert-card {
+  background: white;
   border-radius: 20px;
-  cursor: pointer;
-}
-
-
-.btn-action:hover, .view-more:hover, .logout-btn:hover {
-  filter: brightness(0.9);
-  transform: translateY(-2px);
-  transition: all 0.2s ease;
-}
-
-.btn-action:active, .view-more:active {
-  transform: translateY(0);
-}
-
-
-.card-item {
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.green-val {
-  color: #2d8a39;
-  font-weight: bold;
-  margin-left: 5px;
-}
-
-
-.logout-btn {
-  background-color: #fca5a5;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-
-.btn-action, .view-more, .logout-btn {
-  transition: all 0.2s ease;
-}
-
-.btn-action:hover {
-  filter: brightness(0.9);
-}
-.home-alerts {
-  padding: 20px 40px 0 40px;
-}
-
-.alert-banner {
+  padding: 1.2rem;
+  box-shadow: var(--card-shadow);
   display: flex;
-  align-items: center;
-  padding: 15px 25px;
-  border-radius: 12px;
-  border: 2px solid #333;
-  box-shadow: 4px 4px 0px #333;
-  margin-bottom: 10px;
+  flex-direction: column;
+  min-height: 200px;
 }
 
-.alert-info { background-color: #d1ecf1; border-color: #0c5460; }
-.alert-warning { background-color: #fff3cd; border-color: #856404; }
-.alert-urgent { 
-  background-color: #f8d7da; 
-  border-color: #721c24; 
-  animation: pulse-red 2s infinite;
+.card-title {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 1rem;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
 }
 
-.alert-icon { font-size: 1.5rem; margin-right: 15px; }
-.alert-msg { font-weight: bold; margin: 0; color: #333; }
-.alert-time { font-size: 0.75rem; color: #666; }
-
-@keyframes pulse-red {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.01); }
-  100% { transform: scale(1); }
+.alert-content-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
 }
+
+.alert-item {
+  background: #f8fafc;
+  padding: 0.8rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.empty-alert { text-align: center; color: #888; margin-top: 2rem; }
+
+.mini-manage-btn {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: none;
+  background: #e2e8f0;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.mini-manage-btn:hover { background: #cbd5e1; }
+
+.logout-btn { background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }

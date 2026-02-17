@@ -1,28 +1,30 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import './Login.css';
 
 function Login({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
-    const savedStaff = JSON.parse(localStorage.getItem('staffData') || "[]");
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
+        username: username,
+        password: password
+      });
 
-    if (username === 'admin' && password === 'admin') {
-      onLogin('admin');
-      return;
-    }
-
-    const foundUser = savedStaff.find(
-      (user) => user.username === username && user.password === password
-    );
-
-    if (foundUser) {
-      onLogin(foundUser.occupation.toLowerCase()); 
-    } else {
-      alert("Invalid Username or Password. Please contact Admin.");
+      if (response.data.user) {
+        // --- CRITICAL FIX: Send TWO arguments now ---
+        // 1. The role (lowercase)
+        // 2. The full user object (contains staff_id)
+        onLogin(response.data.user.role.toLowerCase(), response.data.user);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Invalid credentials");
     }
   };
 
@@ -56,6 +58,7 @@ function Login({ onLogin }) {
               required 
             />
           </div>
+          {error && <p style={{ color: '#ff6b6b', textAlign: 'center', fontSize: '14px' }}>{error}</p>}
           <button type="submit" className="login-btn">Sign In</button>
         </form>
       </div>

@@ -1,149 +1,105 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './Items.css';
 
 function Items({ onBack }) {
+  const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showRemoveModal, setShowRemoveModal] = useState(false);
 
-  const [itemsList, setItemsList] = useState(() => {
-    const saved = localStorage.getItem('inventoryData');
-    return saved ? JSON.parse(saved) : [
-      { id: '001', name: 'Apple', cat: 'Food', sub: 'Fruit', price: '20THB' },
-      { id: '002', name: 'Banana', cat: 'Food', sub: 'Fruit', price: '12THB' },
-      { id: '003', name: 'Orange', cat: 'Food', sub: 'Fruit', price: '18THB' }
-    ];
-  });
-
-  const [newItem, setNewItem] = useState({ id: '', name: '', cat: '', sub: '', price: '' });
-  const [removeId, setRemoveId] = useState('');
-
-  useEffect(() => {
-    localStorage.setItem('inventoryData', JSON.stringify(itemsList));
-  }, [itemsList]);
-
-  const filteredItems = itemsList.filter(item => {
-    const search = searchTerm.toLowerCase();
-    return (
-      item.name.toLowerCase().includes(search) || 
-      item.id.includes(search)
-    );
-  });
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewItem(prev => ({ ...prev, [name]: value }));
-  };
-
-  const addItem = () => {
-    if (newItem.id && newItem.name) {
-      setItemsList([...itemsList, newItem]);
-      setShowAddModal(false);
-      setNewItem({ id: '', name: '', cat: '', sub: '', price: '' });
+  const fetchItems = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/auth/item-list');
+      setItems(res.data || []);
+    } catch (err) {
+      console.error("Error fetching items:", err);
     }
   };
 
-  const removeItem = () => {
-    setItemsList(itemsList.filter(item => item.id !== removeId));
-    setShowRemoveModal(false);
-    setRemoveId('');
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const handleRemove = async (id) => {
+    if (!window.confirm("Delete this item?")) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/auth/remove-item/${id}`);
+      fetchItems();
+    } catch (err) {
+      alert("Delete failed.");
+    }
   };
+
+  const filteredItems = items.filter(i => 
+    i.item_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    i.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="items-page">
-      <header className="items-header">
-        <h2 className="items-title">Items List</h2>
-      </header>
-
-      <div className="items-container">
-        <aside className="items-sidebar">
-          <button className="item-action-btn" onClick={() => setShowAddModal(true)}>Add new Item</button>
-          <button className="item-action-btn" onClick={() => setShowRemoveModal(true)}>Remove Item</button>
+      <aside className="items-sidebar">
+        <div className="sidebar-upper-stack">
+          <button className="side-action-btn primary">Add New Item</button>
           
-          <div className="search-container">
-            <div className="search-input-wrapper">
-              <span className="search-icon">🔍</span>
-              <input 
-                type="text" 
-                placeholder="Search Name or ID..." 
-                className="search-bar" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <button className="search-confirm-btn">Search</button>
+          <div className="search-box-container">
+            <span className="search-icon">🔍</span>
+            <input 
+              type="text" 
+              placeholder="Search Name or SKU..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="sidebar-search-input"
+            />
           </div>
-          <button className="item-action-btn return-btn" onClick={onBack}>Return</button>
-        </aside>
 
-        <main className="items-main">
-          <div className="items-table-wrapper">
-            <table className="items-table">
-              <thead>
-                <tr>
-                  <th>Item Id</th>
-                  <th>Name</th>
-                  <th>Category</th>
-                  <th>Sub-Category</th>
-                  <th>per unit price</th>
+          {/* This button is now locked in the top stack */}
+          <button className="side-action-btn return-btn" onClick={onBack}>
+            Return to Dashboard
+          </button>
+        </div>
+      </aside>
+
+      <main className="items-main-content">
+        <div className="table-title-area">
+          <h2 className="page-main-title">Item Inventory List</h2>
+        </div>
+
+        <div className="items-table-scroll-box">
+          <table className="items-data-table">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Sub-Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Last Supplier</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredItems.map((item) => (
+                <tr key={item.item_id}>
+                  <td className="sku-cell">{item.sku}</td>
+                  <td className="name-cell">{item.item_name}</td>
+                  <td>{item.category}</td>
+                  <td>{item.sub_category}</td>
+                  <td>{parseFloat(item.price).toFixed(2)} THB</td>
+                  <td className={`stock-cell ${item.stock_quantity < 10 ? 'low' : ''}`}>
+                    {item.stock_quantity}
+                  </td>
+                  <td className="supplier-cell">{item.last_supplier || 'No History'}</td>
+                  <td>
+                    <button className="item-remove-btn" onClick={() => handleRemove(item.item_id)}>
+                      Remove
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredItems.length > 0 ? (
-                  filteredItems.map(item => (
-                    <tr key={item.id}>
-                      <td>{item.id}</td>
-                      <td>{item.name}</td>
-                      <td>{item.cat}</td>
-                      <td>{item.sub}</td>
-                      <td>{item.price}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan="5" style={{textAlign: 'center', padding: '20px'}}>No matching items found.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </main>
-      </div>
-
-      {showAddModal && (
-        <div className="modal-overlay">
-          <div className="item-modal">
-            <div className="modal-header-dark">
-              <span className="modal-title-text">Add New Item</span>
-              <button className="close-x" onClick={() => setShowAddModal(false)}>×</button>
-            </div>
-            <div className="modal-body-blue">
-              <div className="item-form-row"><label>Item ID</label><input name="id" className="item-input" onChange={handleInputChange}/></div>
-              <div className="item-form-row"><label>Name</label><input name="name" className="item-input" onChange={handleInputChange}/></div>
-              <div className="item-form-row"><label>Category</label><input name="cat" className="item-input" onChange={handleInputChange}/></div>
-              <div className="item-form-row"><label>Sub-Category</label><input name="sub" className="item-input" onChange={handleInputChange}/></div>
-              <div className="item-form-row"><label>Price Per Unit</label><input name="price" className="item-input" onChange={handleInputChange}/></div>
-              <button className="add-item-confirm" onClick={addItem}>Add New Item</button>
-            </div>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
-
-      {showRemoveModal && (
-        <div className="modal-overlay">
-          <div className="item-modal remove-modal">
-            <div className="modal-header-dark">
-              <span className="modal-title-text">Remove Item</span>
-              <button className="close-x" onClick={() => setShowRemoveModal(false)}>×</button>
-            </div>
-            <div className="modal-body-blue">
-              <div className="item-form-row">
-                <label>Enter Item ID</label>
-                <input className="item-input" onChange={(e) => setRemoveId(e.target.value)} />
-              </div>
-              <button className="add-item-confirm remove-btn-style" onClick={removeItem}>Remove Item</button>
-            </div>
-          </div>
-        </div>
-      )}
+      </main>
     </div>
   );
 }

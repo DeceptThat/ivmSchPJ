@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import axios from 'axios';
 import './Home.css';
-
-const dummyData = [
-  { day: 'Mon', sales: 400 }, { day: 'Tue', sales: 300 },
-  { day: 'Wed', sales: 500 }, { day: 'Thu', sales: 200 },
-  { day: 'Fri', sales: 700 }, { day: 'Sat', sales: 600 },
-  { day: 'Sun', sales: 900 },
-];
 
 function Home({ 
   onLogout, onAdminClick, onReportClick, onItemsClick, 
@@ -15,98 +9,110 @@ function Home({
 }) {
   const [announcements, setAnnouncements] = useState([]);
   const [lowStockItems, setLowStockItems] = useState([]);
+  const [chartData, setChartData] = useState([]);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const [statsRes, itemsRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/auth/weekly-stats'),
+        axios.get('http://localhost:5000/api/auth/item-list')
+      ]);
+
+      if (statsRes.data && Array.isArray(statsRes.data)) {
+        setChartData(statsRes.data);
+      }
+
+      // Filter for items lower than 10 units
+      const alerts = itemsRes.data.filter(item => item.stock_quantity < 10);
+      setLowStockItems(alerts);
+
+    } catch (err) {
+      console.error("Dashboard Sync Error:", err.message);
+    }
+  };
 
   useEffect(() => {
+    fetchDashboardStats();
+    const interval = setInterval(() => fetchDashboardStats(), 30000);
+
     const savedNotes = localStorage.getItem('systemNotifications');
     if (savedNotes) setAnnouncements(JSON.parse(savedNotes));
 
-    const stockHistory = JSON.parse(localStorage.getItem('inventoryStock') || "[]");
-    
-    const latestStockMap = {};
-    stockHistory.forEach(entry => {
-      if (!latestStockMap[entry.itemID]) {
-        latestStockMap[entry.itemID] = entry;
-      }
-    });
-
-    const outOfStock = Object.values(latestStockMap).filter(item => item.currentStock <= 0);
-    setLowStockItems(outOfStock);
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="dashboard-page">
       <header className="dashboard-header">
-        <div className="header-content">
-           <div className="logo-placeholder">IVMS LOGO</div>
-           <h1>Inventory Management System</h1>
-           <button onClick={onLogout} className="logout-btn">Logout</button>
-        </div>
+        <div className="logo-section">IVMS LOGO</div>
+        <h1 className="system-title">Inventory Management System</h1>
+        <button onClick={onLogout} className="logout-btn">Logout</button>
       </header>
 
-      <div className="dashboard-main">
-        <div className="left-column">
-          <div className="upper-stack">
-            <div className="chart-box-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={dummyData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="day" axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="sales" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} strokeWidth={3} />
-                </AreaChart>
-              </ResponsiveContainer>
+      <div className="dashboard-grid">
+        {/* LEFT COLUMN: Main Weekly Sales Trend */}
+        <div className="main-chart-section">
+          <div className="chart-container">
+            <h3 className="chart-header">Weekly Sales Trend (Rolling 7 Days)</h3>
+            <div className="chart-box">
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
+                    <YAxis axisLine={false} tickLine={false} tickFormatter={(v) => `฿${v}`} tick={{fontSize: 10}} />
+                    <Tooltip formatter={(v) => [`฿${v}`, 'Revenue']} />
+                    <Area type="monotone" dataKey="sales" stroke="#3b82f6" fill="url(#colorSales)" strokeWidth={3} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : <div className="loading-center">Syncing Live Data...</div>}
             </div>
           </div>
 
-          <div className="button-row">
-            {['Check Out', 'Items', 'Stock', 'Supplier', 'Admin', 'Schedule', 'Report'].map((name) => (
-              <button 
-                key={name} 
-                className={`btn-action ${name === 'Check Out' ? 'checkout' : ''}`}
-                onClick={() => {
-                  if (name === 'Check Out') onCheckOutClick();
-                  else if (name === 'Admin') onAdminClick();
-                  else if (name === 'Report') onReportClick();
-                  else if (name === 'Items') onItemsClick();
-                  else if (name === 'Stock') onStockClick();
-                  else if (name === 'Schedule') onScheduleClick();
-                  else if (name === 'Supplier') onSupplierClick();
-                }}
-              >
-                {name}
-              </button>
-            ))}
+          {/* Navigation Buttons Row moved under the chart */}
+          <div className="action-button-grid">
+            <button className="nav-btn checkout" onClick={onCheckOutClick}>Check Out</button>
+            <button className="nav-btn" onClick={onItemsClick}>Items</button>
+            <button className="nav-btn" onClick={onStockClick}>Stock</button>
+            <button className="nav-btn" onClick={onSupplierClick}>Supplier</button>
+            <button className="nav-btn" onClick={onAdminClick}>Admin</button>
+            <button className="nav-btn" onClick={onScheduleClick}>Schedule</button>
+            <button className="nav-btn" onClick={onReportClick}>Report</button>
           </div>
         </div>
 
-        <div className="right-column">
-          <div className="info-card">
-            <h3>Admin Notifications</h3>
-            {announcements.length > 0 ? (
-              announcements.slice(0, 2).map(note => (
-                <div key={note.id} className={`card-item note-${note.type.toLowerCase()}`}>
-                  {note.type === 'Urgent' ? '🚨 ' : '🔔 '} {note.message}
-                </div>
-              ))
-            ) : (
-              <div className="card-item">No new updates.</div>
-            )}
-            <button className="view-more" onClick={onAdminClick}>Manage</button>
+        {/* RIGHT COLUMN: Small Boxes for Notifications & Alerts */}
+        <div className="side-alert-section">
+          <div className="small-alert-card">
+            <h4 className="card-title">Admin Notifications</h4>
+            <div className="alert-content-list">
+              {announcements.length > 0 ? (
+                announcements.slice(0, 2).map(note => (
+                  <div key={note.id} className="alert-item">🔔 {note.message}</div>
+                ))
+              ) : <div className="empty-alert">No new updates.</div>}
+            </div>
+            <button className="mini-manage-btn" onClick={onAdminClick}>Manage</button>
           </div>
 
-          <div className="info-card">
-            <h3>Out of Stock</h3>
-            {lowStockItems.length > 0 ? (
-              lowStockItems.slice(0, 3).map((item, idx) => (
-                <div key={idx} className="card-item stock-alert">
-                  ⚠️ {item.itemName} ({item.currentStock})
-                </div>
-              ))
-            ) : (
-              <div className="card-item all-clear">✅ All items in stock</div>
-            )}
-            <button className="view-more" onClick={onStockClick}>Restock Now</button>
+          <div className="small-alert-card">
+            <h4 className="card-title">Inventory Alerts (&lt; 10)</h4>
+            <div className="alert-content-list">
+              {lowStockItems.length > 0 ? (
+                lowStockItems.slice(0, 3).map((item, idx) => (
+                  <div key={idx} className="alert-item stock">
+                    {item.stock_quantity === 0 ? '❌' : '⚠️'} {item.item_name} ({item.stock_quantity})
+                  </div>
+                ))
+              ) : <div className="empty-alert">All items well-stocked ✅</div>}
+            </div>
+            <button className="mini-manage-btn" onClick={onStockClick}>Restock Now</button>
           </div>
         </div>
       </div>
