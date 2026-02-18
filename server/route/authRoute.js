@@ -59,15 +59,26 @@ router.get('/item-list', async (req, res) => {
     }
 });
 
+// Example of what your backend fix should look like
 router.post('/add-item', async (req, res) => {
-    try {
-        const newItem = await Item.create(req.body); 
-        res.status(201).json(newItem);
-    } catch (err) {
-        res.status(500).json({ message: "Error: SKU must be unique." });
-    }
-});
+  try {
+    const { sku, item_name, category, price, stock_quantity } = req.body;
+    
+    // Logic to create the item in the database
+    const newItem = await Item.create({
+      sku,
+      item_name,
+      category,
+      price,
+      stock_quantity: stock_quantity || 0
+    });
 
+    res.status(201).json(newItem);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not add item. SKU might be duplicate." });
+  }
+});
 router.delete('/remove-item/:id', async (req, res) => {
     try {
         await Item.destroy({ where: { item_id: req.params.id } });

@@ -5,6 +5,17 @@ import './Items.css';
 function Items({ onBack }) {
   const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // --- ADDED: State for Modal and Form ---
+  const [showModal, setShowModal] = useState(false);
+  const [newItem, setNewItem] = useState({
+    sku: '',
+    item_name: '',
+    category: '',
+    sub_category: '',
+    price: '',
+    stock_quantity: 0
+  });
 
   const fetchItems = async () => {
     try {
@@ -18,6 +29,19 @@ function Items({ onBack }) {
   useEffect(() => {
     fetchItems();
   }, []);
+
+  // --- ADDED: Handle Add Logic ---
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('http://localhost:5000/api/auth/add-item', newItem);
+      setShowModal(false); // Close modal
+      fetchItems(); // Refresh list
+      setNewItem({ sku: '', item_name: '', category: '', sub_category: '', price: '', stock_quantity: 0 });
+    } catch (err) {
+      alert("Error adding item. Ensure SKU is unique.");
+    }
+  };
 
   const handleRemove = async (id) => {
     if (!window.confirm("Delete this item?")) return;
@@ -38,7 +62,10 @@ function Items({ onBack }) {
     <div className="items-page">
       <aside className="items-sidebar">
         <div className="sidebar-upper-stack">
-          <button className="side-action-btn primary">Add New Item</button>
+          {/* --- FIXED: Added onClick to open Modal --- */}
+          <button className="side-action-btn primary" onClick={() => setShowModal(true)}>
+            Add New Item
+          </button>
           
           <div className="search-box-container">
             <span className="search-icon">🔍</span>
@@ -51,7 +78,6 @@ function Items({ onBack }) {
             />
           </div>
 
-          {/* This button is now locked in the top stack */}
           <button className="side-action-btn return-btn" onClick={onBack}>
             Return to Dashboard
           </button>
@@ -62,6 +88,26 @@ function Items({ onBack }) {
         <div className="table-title-area">
           <h2 className="page-main-title">Item Inventory List</h2>
         </div>
+
+        {/* --- ADDED: Add Item Modal Form --- */}
+        {showModal && (
+          <div className="modal-overlay">
+            <div className="item-modal">
+              <h3>Register New Item</h3>
+              <form onSubmit={handleAddSubmit}>
+                <input type="text" placeholder="SKU" required value={newItem.sku} onChange={(e) => setNewItem({...newItem, sku: e.target.value})} />
+                <input type="text" placeholder="Item Name" required value={newItem.item_name} onChange={(e) => setNewItem({...newItem, item_name: e.target.value})} />
+                <input type="text" placeholder="Category" value={newItem.category} onChange={(e) => setNewItem({...newItem, category: e.target.value})} />
+                <input type="text" placeholder="Sub-Category (e.g., Fruit)" value={newItem.sub_category} onChange={(e) => setNewItem({...newItem, sub_category: e.target.value})} />
+                <input type="number" placeholder="Price" required value={newItem.price} onChange={(e) => setNewItem({...newItem, price: e.target.value})} />
+                <div className="modal-actions">
+                  <button type="submit" className="save-btn">Save</button>
+                  <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         <div className="items-table-scroll-box">
           <table className="items-data-table">
