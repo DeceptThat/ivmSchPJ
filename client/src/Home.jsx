@@ -11,6 +11,16 @@ function Home({
   const [lowStockItems, setLowStockItems] = useState([]);
   const [chartData, setChartData] = useState([]);
 
+  // --- FETCH NOTIFICATIONS FROM DATABASE ---
+  const fetchNotifications = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/auth/notification-list');
+      setAnnouncements(res.data || []);
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+    }
+  };
+
   const fetchDashboardStats = async () => {
     try {
       const [statsRes, itemsRes] = await Promise.all([
@@ -26,17 +36,28 @@ function Home({
       const alerts = itemsRes.data.filter(item => item.stock_quantity < 10);
       setLowStockItems(alerts);
 
+      // Also refresh notifications when stats refresh
+      fetchNotifications();
+
     } catch (err) {
       console.error("Dashboard Sync Error:", err.message);
     }
   };
 
   useEffect(() => {
+    // Initial fetches
+    fetchNotifications();
     fetchDashboardStats();
-    const interval = setInterval(() => fetchDashboardStats(), 30000);
+    
+    // Auto-sync every 30 seconds
+    const interval = setInterval(() => {
+        fetchDashboardStats();
+        fetchNotifications();
+    }, 30000);
 
+    // Keep your localStorage check as a backup if needed, but the API will overwrite it
     const savedNotes = localStorage.getItem('systemNotifications');
-    if (savedNotes) setAnnouncements(JSON.parse(savedNotes));
+    if (savedNotes && announcements.length === 0) setAnnouncements(JSON.parse(savedNotes));
 
     return () => clearInterval(interval);
   }, []);
@@ -75,7 +96,6 @@ function Home({
             </div>
           </div>
 
-          {/* Navigation Buttons Row moved under the chart */}
           <div className="action-button-grid">
             <button className="nav-btn checkout" onClick={onCheckOutClick}>Check Out</button>
             <button className="nav-btn" onClick={onItemsClick}>Items</button>
@@ -94,7 +114,8 @@ function Home({
             <div className="alert-content-list">
               {announcements.length > 0 ? (
                 announcements.slice(0, 2).map(note => (
-                  <div key={note.id} className="alert-item">🔔 {note.message}</div>
+                  /* FIXED: Using notif_id from database */
+                  <div key={note.notif_id || note.id} className="alert-item">🔔 {note.message}</div>
                 ))
               ) : <div className="empty-alert">No new updates.</div>}
             </div>
