@@ -1,17 +1,23 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
 
 const sequelize = new Sequelize(
-    process.env.DB_NAME, 
-    process.env.DB_USER, 
-    String(process.env.DB_PASSWORD), 
+    'ivm_app',                          // Database Name
+    'hladies',                          // User
+    '8L45GMYmyf0yRJSVvYzrsldfggdwTRzg', // Password
     {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT || 5432,
+        host: 'dpg-d6aj3jp5pdvs73ep9570-a.singapore-postgres.render.com', // External Host
+        port: 5432,
         dialect: 'postgres',
         logging: false,
+        // --- REQUIRED FOR RENDER CLOUD ---
+        dialectOptions: {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false // This allows the secure connection to Render
+            }
+        },
         pool: {
-            max: parseInt(process.env.DB_MAX) || 5,
+            max: 5,
             min: 0,
             acquire: 30000,
             idle: 10000

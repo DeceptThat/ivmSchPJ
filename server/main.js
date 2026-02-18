@@ -17,30 +17,21 @@ app.use('/api/auth', authRoutes);
 
 const startApp = async () => {
     try {
+        // 1. Authenticate with Render
         await sequelize.authenticate();
-        console.log('✅ Connected to Postgres');
+        console.log('✅ Connected to Online Postgres (Render)');
 
-        // Initial Sync
+        // 2. Sync once on startup
+        // This ensures the tables exist before the server starts accepting requests
         await sequelize.sync({ alter: true });
-        console.log('✅ Database Initialized');
-
-        // --- THE AUTO-RESYNC LOOP ---
-        // This runs every 30 seconds without stopping the server
-        setInterval(async () => {
-            try {
-                await sequelize.sync({ alter: true });
-                console.log('🔄 30s Auto-Resync: Database schema is up to date.');
-            } catch (err) {
-                console.error('❌ Auto-Resync Failed:', err.message);
-            }
-        }, 30000); // 30,000 milliseconds = 30 seconds
+        console.log('✅ Database Schema Synced');
 
         const PORT = process.env.PORT || 5000; 
         app.listen(PORT, () => {
-            console.log(`🚀 Server: http://localhost:${PORT}`);
+            console.log(`🚀 Server running on port ${PORT}`);
         });
     } catch (error) {
-        console.error('❌ Fail: ', error.message);
+        console.error('❌ Startup Fail: ', error.message);
     }
 };
 
